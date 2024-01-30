@@ -2,7 +2,7 @@ $(document).ready(function () {
     const apiKey = 'd8e7e5ce82a97e212e43f46da05ae432';
 
     function getCoordinates(city) {
-        const geoUrl = `http://api.openweathermap.org/geo/1.0/direct?q=${city}&limit=1&appid=${apiKey}`;
+        const geoUrl = `https://api.openweathermap.org/geo/1.0/direct?q=${city}&limit=1&appid=${apiKey}`;
 
         $.ajax({
             url: geoUrl,
