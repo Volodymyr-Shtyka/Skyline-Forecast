@@ -1,0 +1,41 @@
+/* Custom Styles */
+
+/* Header Styles */
+.weather-header {
+    background-color: #343a40;
+}
+
+/* Form Styles */
+.form-label {
+    color: #333;
+}
+
+.weather-search {
+    width: 80%;
+}
+
+.search-button {
+    width: 100%;
+    background-color: #007bff;
+    color: #fff;
+}
+
+/* List Group Styles */
+.list-group {
+    margin-top: 20px;
+}
+
+/* Weather Information Styles */
+#today, #forecast {
+    border: 1px solid #ddd;
+    padding: 15px;
+    margin-top: 20px;
+}
+
+/* Additional Styles */
+.forecast-item {
+    margin: 5px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    text-align: center;
+}
