@@ -1,6 +1,9 @@
+// When the document is ready, execute the following code
 $(document).ready(function () {
+    // API key for OpenWeatherMap
     const apiKey = 'd8e7e5ce82a97e212e43f46da05ae432';
 
+    // Function to get coordinates of a city using OpenWeatherMap API
     function getCoordinates(city) {
         const geoUrl = `https://api.openweathermap.org/geo/1.0/direct?q=${city}&limit=1&appid=${apiKey}`;
 
@@ -9,23 +12,27 @@ $(document).ready(function () {
             method: 'GET',
             dataType: 'json',
             success: function (data) {
+                // If coordinates are found, get weather and add to history
                 if (data && data.length > 0) {
                     const lat = data[0].lat;
                     const lon = data[0].lon;
                     getWeather(city, lat, lon);
                     addToHistory(city);
                 } else {
+                    // Log an error if no coordinates are found
                     console.error('No coordinates found for the city:', city);
                     showFeedback('No coordinates found for the city.');
                 }
             },
             error: function (error) {
+                // Log an error if there's an issue fetching coordinates
                 console.error('Error fetching coordinates:', error);
                 showFeedback('Error fetching coordinates. Please try again later.');
             }
         });
     }
 
+    // Function to get weather data using coordinates
     function getWeather(city, lat, lon) {
         const apiUrl = `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${apiKey}`;
 
@@ -34,20 +41,23 @@ $(document).ready(function () {
             method: 'GET',
             dataType: 'json',
             success: function (data) {
+                // Display weather data
                 displayWeather(data);
             },
             error: function (error) {
+                // Log an error if there's an issue fetching weather data
                 console.error('Error fetching weather data:', error);
                 showFeedback('Error fetching weather data. Please try again later.');
             }
         });
     }
 
+    // Function to display current weather
     function displayWeather(data) {
         // Clear existing content
         $('#today').empty();
 
-        // Getting data
+        // Extract relevant data from the API response
         const cityName = data.city.name;
         const date = formatDateString(data.list[0].dt_txt);
         const weatherIcon = data.list[0].weather[0].icon;
@@ -57,6 +67,7 @@ $(document).ready(function () {
         const windSpeed = data.list[0].wind.speed.toFixed(2);
         const humidity = data.list[0].main.humidity;
 
+        // Create HTML content for current weather
         const todayContent = `
             <h2>${cityName}
                 <small>
@@ -78,6 +89,7 @@ $(document).ready(function () {
         getForecast(lat, lon);
     }
 
+    // Function to get 5-day forecast using coordinates
     function getForecast(lat, lon) {
         const forecastUrl = `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${apiKey}`;
 
@@ -86,15 +98,18 @@ $(document).ready(function () {
             method: 'GET',
             dataType: 'json',
             success: function (data) {
+                // Display 5-day forecast
                 displayForecast(data);
             },
             error: function (error) {
+                // Log an error if there's an issue fetching forecast data
                 console.error('Error fetching forecast data:', error);
                 showFeedback('Error fetching forecast data. Please try again later.');
             }
         });
     }
 
+    // Function to display 5-day forecast
     function displayForecast(data) {
         // Update HTML with 5-day forecast data (next 5 days)
         const forecastData = [];
@@ -104,6 +119,7 @@ $(document).ready(function () {
 
         $('.forecast-list').empty();
 
+        // Loop through forecast data and create HTML for each day
         forecastData.forEach(day => {
             const forecastDate = formatDateString(day.dt_txt);
             const weatherIcon = day.weather[0].icon;
@@ -128,20 +144,24 @@ $(document).ready(function () {
         });
     }
 
+    // Function to format date string
     function formatDateString(dateString) {
         const [year, month, day] = dateString.split(' ')[0].split('-');
         return `${day}/${month}/${year}`;
     }
 
+    // Event handler for the search form submission
     $('#searchForm').submit(function (event) {
         event.preventDefault();
         const city = $('#searchInput').val().trim();
 
+        // If the input is not empty, get coordinates for the city
         if (city !== '') {
             getCoordinates(city);
         }
     });
 
+    // Function to add searched city to history
     function addToHistory(city) {
         // Check if the city is already in the history
         if ($('#history button:contains("' + city + '")').length === 0) {
@@ -155,6 +175,7 @@ $(document).ready(function () {
         }
     }
 
+    // Event handler for clicking on a city in the search history
     $('#history').on('click', 'button', function () {
         const city = $(this).text();
         $('#searchInput').val(city);
@@ -165,6 +186,7 @@ $(document).ready(function () {
     const storedHistory = JSON.parse(localStorage.getItem('weatherHistory')) || [];
     storedHistory.forEach(city => addToHistory(city));
 
+    // Function to show feedback message
     function showFeedback(message) {
         // Display the feedback message
         $('#feedback').text(message).show();
