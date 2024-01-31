@@ -3,46 +3,26 @@ $(document).ready(function () {
     // API key for OpenWeatherMap
     const apiKey = 'd8e7e5ce82a97e212e43f46da05ae432';
 
-    // Function to get coordinates of a city using OpenWeatherMap API
-    function getCoordinates(city) {
-        const geoUrl = `https://api.openweathermap.org/geo/1.0/direct?q=${city}&limit=1&appid=${apiKey}`;
-
-        $.ajax({
-            url: geoUrl,
-            method: 'GET',
-            dataType: 'json',
-            success: function (data) {
-                // If coordinates are found, get weather and add to history
-                if (data && data.length > 0) {
-                    const lat = data[0].lat;
-                    const lon = data[0].lon;
-                    getWeather(city, lat, lon);
-                    addToHistory(city);
-                } else {
-                    // Log an error if no coordinates are found
-                    console.error('No coordinates found for the city:', city);
-                    showFeedback('No coordinates found for the city.');
-                }
-            },
-            error: function (error) {
-                // Log an error if there's an issue fetching coordinates
-                console.error('Error fetching coordinates:', error);
-                showFeedback('Error fetching coordinates. Please try again later.');
-            }
-        });
-    }
-
-    // Function to get weather data using coordinates
-    function getWeather(city, lat, lon) {
-        const apiUrl = `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${apiKey}`;
+    // Function to get weather data using OpenWeatherMap API
+    function getWeather(city) {
+        const apiUrl = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}`;
 
         $.ajax({
             url: apiUrl,
             method: 'GET',
             dataType: 'json',
             success: function (data) {
-                // Display weather data
-                displayWeather(data);
+                // Check if the data is valid
+                if (data && data.name) {
+                    // Display weather data
+                    displayWeather(data, city);
+                    // Add to history only if data is valid
+                    addToHistory(city);
+                } else {
+                    // Log an error if data is not valid
+                    console.error('Invalid weather data received:', data);
+                    showFeedback('Invalid weather data. Please try again.');
+                }
             },
             error: function (error) {
                 // Log an error if there's an issue fetching weather data
@@ -53,19 +33,19 @@ $(document).ready(function () {
     }
 
     // Function to display current weather
-    function displayWeather(data) {
+    function displayWeather(data, city) {
         // Clear existing content
         $('#today').empty();
 
         // Extract relevant data from the API response
-        const cityName = data.city.name;
-        const date = formatDateString(data.list[0].dt_txt);
-        const weatherIcon = data.list[0].weather[0].icon;
+        const cityName = data.name;
+        const date = getTheCurrentDate();
+        const weatherIcon = data.weather[0].icon;
         const iconUrl = `https://openweathermap.org/img/w/${weatherIcon}.png`;
-        const temperature = data.list[0].main.temp;
+        const temperature = data.main.temp;
         const temperatureCelsius = (temperature - 273.15).toFixed(2);
-        const windSpeed = data.list[0].wind.speed.toFixed(2);
-        const humidity = data.list[0].main.humidity;
+        const windSpeed = data.wind.speed.toFixed(2);
+        const humidity = data.main.humidity;
 
         // Create HTML content for current weather
         const todayContent = `
@@ -83,15 +63,13 @@ $(document).ready(function () {
         // Append the dynamically created HTML to the "today" section
         $('#today').append(todayContent);
 
-        // Fetch 5-day forecast using coordinates from the current weather data
-        const lat = data.city.coord.lat;
-        const lon = data.city.coord.lon;
-        getForecast(lat, lon);
+        // Fetch 5-day forecast using city name
+        getForecast(city);
     }
 
-    // Function to get 5-day forecast using coordinates
-    function getForecast(lat, lon) {
-        const forecastUrl = `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${apiKey}`;
+    // Function to get 5-day forecast using city name
+    function getForecast(city) {
+        const forecastUrl = `https://api.openweathermap.org/data/2.5/forecast?q=${city}&appid=${apiKey}`;
 
         $.ajax({
             url: forecastUrl,
@@ -113,7 +91,7 @@ $(document).ready(function () {
     function displayForecast(data) {
         // Update HTML with 5-day forecast data (next 5 days)
         const forecastData = [];
-        for (let i = 1; i < data.list.length; i += 8) {
+        for (let i = 8; i < data.list.length; i += 7) {
             forecastData.push(data.list[i]);
         }
 
@@ -144,6 +122,19 @@ $(document).ready(function () {
         });
     }
 
+    function getTheCurrentDate() {
+        // Get the current date
+        var currentDate = new Date();
+
+        // Extract day, month, and year components
+        var day = currentDate.getDate();
+        var month = currentDate.getMonth() + 1; // Adding 1 because months are zero-based
+        var year = currentDate.getFullYear();
+
+        // Format the date as dd/mm/yyyy
+        return (day < 10 ? '0' : '') + day + '/' + (month < 10 ? '0' : '') + month + '/' + year;
+    }
+
     // Function to format date string
     function formatDateString(dateString) {
         const [year, month, day] = dateString.split(' ')[0].split('-');
@@ -155,9 +146,9 @@ $(document).ready(function () {
         event.preventDefault();
         const city = $('#searchInput').val().trim();
 
-        // If the input is not empty, get coordinates for the city
+        // If the input is not empty, get weather
         if (city !== '') {
-            getCoordinates(city);
+            getWeather(city);
         }
     });
 
@@ -179,7 +170,7 @@ $(document).ready(function () {
     $('#history').on('click', 'button', function () {
         const city = $(this).text();
         $('#searchInput').val(city);
-        getCoordinates(city);
+        getWeather(city);
     });
 
     // Load search history from localStorage on page load
